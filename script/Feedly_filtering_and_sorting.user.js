@@ -14,7 +14,7 @@
 // @resource    node-creation-observer.js https://greasyfork.org/scripts/19857-node-creation-observer/code/node-creation-observer.js?version=174436
 // @require     https://cdnjs.cloudflare.com/ajax/libs/jscolor/2.0.4/jscolor.min.js
 // @include     *://feedly.com/*
-// @version     3.22.33
+// @version     3.22.34
 // @grant       GM_setValue
 // @grant       GM_getValue
 // @grant       GM_deleteValue
@@ -2434,7 +2434,15 @@ class FeedlyPage {
                 configurable: true,
             });
             stream.setAutoLoadBatchSize = () => {
-                batchSize = Math.min(stream.state.info.unreadCount, autoLoadAllArticleDefaultBatchSize);
+                // Ensure unreadCount is a number, default to 20 if it's missing/undefined
+                let unread = (stream.state && stream.state.info && typeof stream.state.info.unreadCount === 'number') ? stream.state.info.unreadCount : 20;
+
+                batchSize = Math.min(unread, autoLoadAllArticleDefaultBatchSize);
+
+                // Final safety check: if batchSize is somehow still NaN, force it to 20
+                if (isNaN(batchSize)) {
+                    batchSize = 20;
+                }
             };
         }
         function checkAutoLoad() {
